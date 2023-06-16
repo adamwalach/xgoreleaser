@@ -136,6 +136,24 @@ builds:
         - cmd: cyclonedx-gomod app -licenses -json -output "./dist/{{ .ProjectName }}_{{ .Version }}_sqlite_{{ .Target }}.bom.json"
         - cmd: bash <(curl https://raw.githubusercontent.com/ory/xgoreleaser/master/rename.sh) "./dist/{{ .ProjectName }}_{{ .Version }}_sqlite_{{ .Target }}.bom.json"
 
+  - id: alpine-cgo-amd64-custom
+    flags:
+      - "-tags=hsm,json1"
+    ldflags:
+      - "-s -w -X {{.Var.buildinfo_tag}}={{.Tag}} -X {{.Var.buildinfo_hash}}={{.FullCommit}} -X {{.Var.buildinfo_date}}={{.Date}}"
+    binary: "{{ .ProjectName }}"
+    env:
+      - CGO_ENABLED=1
+      - CC=musl-gcc
+    goarch:
+      - amd64
+    goos:
+      - linux
+    hooks:
+      post:
+        - cmd: cyclonedx-gomod app -licenses -json -output "./dist/{{ .ProjectName }}_{{ .Version }}_{{ .Target }}.bom.json"
+        - cmd: bash <(curl https://raw.githubusercontent.com/ory/xgoreleaser/master/rename.sh) "./dist/{{ .ProjectName }}_{{ .Version }}_{{ .Target }}.bom.json"
+
   - id: alpine-cgo-arm64
     flags:
       - -tags
@@ -275,11 +293,9 @@ archives:
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end }}
 
-  - id: alpine-cgo
+  - id: alpine-cgo-custom
     builds:
-      - alpine-cgo-amd64
-      - alpine-cgo-arm64
-      - alpine-cgo-arm
+      - alpine-cgo-amd64-custom
     format_overrides:
       - goos: windows
         format: zip
@@ -289,6 +305,23 @@ archives:
       {{- if eq .Os "darwin" }}macOS
       {{- else }}{{ .Os }}
       {{- end }}_sqlite_libmusl_
+      {{- if eq .Arch "amd64" }}64bit
+      {{- else if eq .Arch "386" }}32bit
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+
+  - id: alpine-cgo-custom
+    builds:
+      - alpine-cgo-amd64-custom
+    format_overrides:
+      - goos: windows
+        format: zip
+    name_template: >-
+      {{- .ProjectName }}_
+      {{- .Version }}-
+      {{- if eq .Os "darwin" }}macOS
+      {{- else }}{{ .Os }}
+      {{- end }}_
       {{- if eq .Arch "amd64" }}64bit
       {{- else if eq .Arch "386" }}32bit
       {{- else }}{{ .Arch }}{{ end }}
@@ -363,6 +396,16 @@ dockers:
     goarch: amd64
     ids:
       - alpine-cgo-amd64
+    build_flag_templates:
+      - "--platform=linux/amd64"
+
+  - image_templates:
+      - "oryd/{{ .ProjectName }}:v{{ .Version }}-amd64"
+    use: buildx
+    dockerfile: "{{ .Var.dockerfile }}"
+    goarch: amd64
+    ids:
+      - alpine-cgo-amd64-custom
     build_flag_templates:
       - "--platform=linux/amd64"
 
