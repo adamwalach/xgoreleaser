@@ -417,7 +417,7 @@ dockers:
   - image_templates:
       - "oryd/{{ .ProjectName }}:v{{ .Version }}-amd64"
     use: buildx
-    dockerfile: ".docker/Dockerfile-distroless"
+    dockerfile: "{{ .Var.dockerfile }}"
     goarch: amd64
     ids:
       - static-cgo
