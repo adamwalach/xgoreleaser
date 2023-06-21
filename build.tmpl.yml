@@ -130,10 +130,8 @@ builds:
       - CC=musl-gcc
     goarch:
       - amd64
-      - arm64
     goos:
       - linux
-      - darwin
     hooks:
       post:
         - cmd: cyclonedx-gomod app -licenses -json -output "./dist/{{ .ProjectName }}_{{ .Version }}_sqlite_{{ .Target }}.bom.json"
@@ -149,8 +147,10 @@ builds:
       - CGO_ENABLED=0
     goarch:
       - amd64
+      - arm64
     goos:
       - linux
+      - darwin
     hooks:
       post:
         - cmd: cyclonedx-gomod app -licenses -json -output "./dist/{{ .ProjectName }}_{{ .Version }}_{{ .Target }}.bom.json"
