@@ -318,9 +318,9 @@ archives:
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end }}
 
-  - id: alpine-cgo-custom
+  - id: alpine-cgo
     builds:
-      - alpine-cgo-amd64-custom
+      - alpine-cgo-amd64
     format_overrides:
       - goos: windows
         format: zip
