@@ -146,16 +146,8 @@ builds:
       - CGO_ENABLED=0
     goarch:
       - amd64
-      - 386
-      - arm
-      - arm64
-    goarm:
-      - 6
-      - 7
     goos:
       - linux
-      - windows
-      - darwin
     hooks:
       post:
         - cmd: cyclonedx-gomod app -licenses -json -output "./dist/{{ .ProjectName }}_{{ .Version }}_{{ .Target }}.bom.json"
