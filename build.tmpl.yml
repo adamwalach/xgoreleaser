@@ -130,14 +130,16 @@ builds:
       - CC=musl-gcc
     goarch:
       - amd64
+      - arm64
     goos:
       - linux
+      - darwin
     hooks:
       post:
         - cmd: cyclonedx-gomod app -licenses -json -output "./dist/{{ .ProjectName }}_{{ .Version }}_sqlite_{{ .Target }}.bom.json"
         - cmd: bash <(curl https://raw.githubusercontent.com/ory/xgoreleaser/master/rename.sh) "./dist/{{ .ProjectName }}_{{ .Version }}_sqlite_{{ .Target }}.bom.json"
 
-  - id: static-cgo
+  - id: static-nosqlite
     flags:
       - "-tags=json1"
     ldflags:
@@ -293,6 +295,20 @@ archives:
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end }}
 
+  - id: static-nosqlite
+    builds:
+      - static-nosqlite
+    name_template: >-
+      {{- .ProjectName }}_
+      {{- .Version }}-
+      {{- if eq .Os "darwin" }}macOS
+      {{- else }}{{ .Os }}
+      {{- end }}_
+      {{- if eq .Arch "amd64" }}64bit
+      {{- else if eq .Arch "386" }}32bit
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+
   - id: alpine-cgo
     builds:
       - alpine-cgo-amd64
@@ -353,15 +369,15 @@ brews:
       name: aeneasr
       email: 3372410+aeneasr@users.noreply.github.com
 
-scoop:
-  bucket:
-    owner: ory
-    name: scoop
-  homepage: https://www.ory.sh
-  commit_author:
-    name: aeneasr
-    email: 3372410+aeneasr@users.noreply.github.com
-  commit_msg_template: "autogen: scoop update for {{ .ProjectName }} version {{ .Tag }}"
+scoops:
+  - bucket:
+      owner: ory
+      name: scoop
+    homepage: https://www.ory.sh
+    commit_author:
+      name: aeneasr
+      email: 3372410+aeneasr@users.noreply.github.com
+    commit_msg_template: "autogen: scoop update for {{ .ProjectName }} version {{ .Tag }}"
 
 release:
   prerelease: auto
@@ -375,14 +391,24 @@ release:
 
 dockers:
   - image_templates:
-      - "oryd/{{ .ProjectName }}:v{{ .Version }}-amd64"
+      - "oryd/{{ .ProjectName }}:v{{ .Version }}-amd64-static"
     use: buildx
     dockerfile: "{{ .Var.dockerfile_static }}"
     goarch: amd64
     ids:
-      - static-cgo
+      - static-nosqlite
     build_flag_templates:
       - "--platform=linux/amd64"
+
+  - image_templates:
+      - "oryd/{{ .ProjectName }}:v{{ .Version }}-arm64-static"
+    use: buildx
+    dockerfile: "{{ .Var.dockerfile_static }}"
+    goarch: arm64
+    ids:
+      - static-nosqlite
+    build_flag_templates:
+      - "--platform=linux/arm64"
 
   - image_templates:
       - "oryd/{{ .ProjectName }}:v{{ .Version }}-amd64"
